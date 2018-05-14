@@ -1,4 +1,4 @@
 Information given at epoch of 00:00h Jan 1, 2018 UTC
 Vehicle number	Vehicle Coords(km-ECI-xyz)	Vehicle velocity(km/s-ECI-xyz)
-1	7000	100	0	0	9	0
-2	0	4000	6000	-8	0	1
+1   0       -7878.1 0        6.5565  0     -2.7583
+2	0       4000	6000    -8      0       1
