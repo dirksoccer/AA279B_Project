@@ -134,10 +134,10 @@ figure
 hold on
 
 load('topo.mat','topo','topomap1');
-[x,y,z,props,cax] = prepplot(size_for_things);
+[xearth,yearth,zearth,props,cax] = prepplot(size_for_things);
 cax = newplot(cax);
-h(1) = surf(x,y,z,props,'parent',cax);
-hold off
+h(1) = surf(xearth,yearth,zearth,props,'parent',cax);
+hold on
 axis equal
 xlabel(['X [km]'])
 ylabel(['Y [km]'])
@@ -148,25 +148,16 @@ cmapsize = 64;  % 64-elements is each colormap
 cvalue1 = [-7473 ,5731];
 C1 = min(cmapsize,round((cmapsize-1)*(topo-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
 set(h(1),'CData',C1);
-colormap([topomap1;autumn(64)])
-caxis
+colormap([topomap1;autumn(64)]);
 
 
+%Plot sat 1 and its possible trajectory
+
+h(2) = surf(x,y,z,64+tits*16,'FaceAlpha',.9, 'EdgeColor','none');
 
 
-%% Plot sat 1 and its possible trajectory
-
-h(2) = surf(x,y,z,tits,'FaceAlpha',.7);
-
-cvalue2 = [0,max(tits)];
-C2 = 64+min(cmapsize,round((cmapsize-1)*(tits-cvalue2(1))/(cvalue2(2)-cvalue2(1)))+1);
-set(h(2),'CData',C2);
-caxis([min(C1(:)) max(C2(:))]);
-
-if 0
-    
+ 
 h(3) = plot3(r1(1),r1(2),r1(3),'or','MarkerFaceColor','r');
 h(4) = plot3(yout(end,1),yout(end,2),yout(end,3),'og','MarkerFaceColor','g');
-end
 
-
+disp(' ')
