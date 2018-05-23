@@ -217,7 +217,14 @@ small = 0.00001; % can affect cases where znew is multiples of 2pi^2
 % Following line commented out by Barrows 1/2014
 %           fprintf( fid,'%s ',errorl );
 % Following line added by Barrows 1/2014 (fid changed to 1)        
-           fprintf( 1,'%s ',errorl ); 
+         
+
+%%%%%%%%% CHANGED FROM BARROWS CODE 
+% should not be commented out, nut it got really annoying
+%  fprintf( 1,'%s ',errorl ); 
+%%%%%%%%% CHANGED FROM BARROWS CODE
+
+
            
        end;
           

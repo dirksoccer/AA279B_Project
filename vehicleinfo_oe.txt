@@ -1,4 +1,4 @@
 Information given at epoch of 00:00h Jan 1, 2018 UTC
 Vehicle number	a(km)   e   i(deg)  RAN(deg)    AP (deg)    M_o(deg)
-1       7878.1          0      45    0          40          0     
+1       6778.1          .0      90    78          40          180     
 2       7878.1          0      45    0          40          10     

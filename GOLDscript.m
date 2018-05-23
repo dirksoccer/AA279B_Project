@@ -15,16 +15,17 @@ close all;
     R_earth = 6378.1; %(km)
     omega_earth = 0.0000729211585530;%(rad/sec) - per HW3
     mu_earth = 398600.4418; %(km^2/s^2)
-    time_sim = 45.4*86400; %seconds (days*86400) since epoch
-    tlength = 1*3600; %seconds of simulation
+  %  time_sim = 45.4*86400; %seconds (days*86400) since epoch
+   % tlength = 1*3600; %seconds of simulation
 
-    tvec = time_sim:1:time_sim+tlength;
-    thetavec = mod((280.4606 + 360.9856473*tvec/86400)/180*pi,2*pi);
+    %tvec = time_sim:1:time_sim+tlength;
+    %thetavec = mod((280.4606 + 360.9856473*tvec/86400)/180*pi,2*pi);
     size_for_things = 100;
 
     %target things
     target_alt = 1200; %(km)
     target_ratio = (R_earth+target_alt)/R_earth;
+    max_delta_v = 4; 
 
 %% Initialize Satellite Parameters
     fileID = fopen('vehicleinfo_oe.txt','r');
@@ -60,11 +61,20 @@ close all;
     r1 = R_vehicles_ECI(1,:)';
     v1 = V_vehicles_ECI(1,:)';
     options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
-    tvec = 0:.01:60*5;
+    %need to have a delay of 0 if you want to "send it" at 0 seconds
+    t_start_to_intercept = 25*60; %25 minutes
+    t_deorbit_delay = [0 5 10 15 20]*60;
+    
+    tvec = linspace(0,2*pi*sqrt(oe(1,1)^3/mu_earth),10001);
+    %set this up for 1 complete period of the orbit
+    
     odefun = @(tout,yout) differinertial(tout,yout,mu_earth);
     [tout,yout] = ode113(odefun,tvec,[r1;v1],options);
 
-
+    for i = 1:length(t_deorbit_delay)
+        [~,timeindex(i)] = min(abs(t_deorbit_delay(i) - tout)); % get index for the needed time step
+    end
+    
 %% finding sat 1 intercept possibilities
 
     % Define search_space
@@ -76,23 +86,50 @@ close all;
     z = z*r; %psuedo radius var
     v1_out = x.*NaN; %initialize an array
     suc = v1_out;
-    for i = 1:length(x)
+ 
+    
+    %% The first sat
+    
+    for i = 1:length(x) %iterate through search space
         for j = 1:length(y)
-            [vout, ~] = lambert_v(mu_earth,r1,[x(i,j) y(i,j) z(i,j)],'s',0,25*60);
-            suc(i,j) = norm(v1-vout);
-            [v2out,~] = lambert_v(mu_earth,yout(end,1:3),[x(i,j) y(i,j) z(i,j)],'s',0,20*60);
-            success2 = norm(yout(end,4:6)-v2out);
-            if suc(i,j)>success2
-                suc(i,j) = success2;
-            end
+            
+            for index = 1:length(t_deorbit_delay) %iterate through different delays
 
-            v1_out(i,j,1:3) = vout;
+                [v2out,~] = lambert_v(mu_earth,yout(timeindex(index),1:3)',[x(i,j) y(i,j) z(i,j)],'s',0,t_start_to_intercept-t_deorbit_delay(index));
+                
+                %solves a lambert using the position from delayed time
+                %index
+                success2 = norm(yout(timeindex(index),4:6)'-v2out);
+                %set a dummy variable, success2, as the current step's DV
+                %needed to get to the x,y,z position being solved for
+                
+                if index == 1   % need to initialize numbers in suc somewhere to be able to compare things to it
+                    vout = v2out; %set the DV for that iteration 
+                    suc(i,j) = norm(yout(timeindex(index),4:6)'-vout);%update the suc matrix with the first set of DV's
+
+                elseif(suc(i,j)>success2) %for the rest of delay times, 
+                    %if it's better than the previous, update it to suc
+             
+                    suc(i,j) = success2;
+                    vout = v2out; %also output the v2out from lambert that gave a better DV
+                    if (success2 <= max_delta_v)
+                        disp('got better'); %if the improvement is within our limits, 
+                %print that the solver found a better solution
+                %after using a delay
+                %I have played with it a bit and have not got any
+                %increase without reversing the order of the 
+                %t_deorbit_delay variable
+                    end
+                end    
+            end
+            v1_out(i,j,1:3) = vout; %update velocity vector to the best one
         end
     end
 
+
     success = suc;
-    success(suc>4) = NaN;
-clearvars success2 suc
+    success(suc>max_delta_v) = NaN; %only grabbing the values within our DV requirement
+clearvars success2 suc i j index vout v2out 
 %% Plot Globe, Sat 1 and possibe Trajectories
 
     figure
@@ -117,7 +154,23 @@ clearvars success2 suc
 clearvars cmapsize C1 cax i j topomap1 topo
 
     %Plot sat 1 and its possible trajectory
-    h(2) = surf(x,y,z,64+success*16,'FaceAlpha',.9, 'EdgeColor','none');
-    h(3) = plot3(r1(1),r1(2),r1(3),'or','MarkerFaceColor','r');
-    h(4) = plot3(yout(end,1),yout(end,2),yout(end,3),'og','MarkerFaceColor','g');
+    h(2) = surf(x,y,z,64+success*(64/max_delta_v),'FaceAlpha',.9, 'EdgeColor','none');
+    h(3) = plot3(yout(:,1),yout(:,2),yout(:,3),'r');
+    h(4) = plot3(yout(1,1),yout(1,2),yout(1,3),'or','MarkerFaceColor','r');
+
+    hold on
+    for i = 2:length(t_deorbit_delay)
+    h(4+i) = plot3(yout(timeindex(i),1),yout(timeindex(i),2),yout(timeindex(i),3),'om','MarkerFaceColor','m');
+    end
+    
     disp(' ')
+    clearvars i tvec
+    
+    %% Beginning with the new satellites
+
+    
+    
+    
+    
+    
+    
