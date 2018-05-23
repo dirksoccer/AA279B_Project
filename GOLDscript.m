@@ -27,7 +27,7 @@ close all;
     target_ratio = (R_earth+target_alt)/R_earth;
 
 %% Initialize Satellite Parameters
-    fileID = fopen('vehicleinfo.txt','r');
+    fileID = fopen('vehicleinfo_oe.txt','r');
 
     x = textscan(fileID,'%s',1,'delimiter','\n\r');
     header1 = cell2mat(x{1});
@@ -39,9 +39,17 @@ close all;
 
 
     vehicles = data(end,1);
-    R_vehicles_ECI = data(:,2:4);
-    V_vehicles_ECI = data(:,5:7);
+    oe = data(:,2:7); %pull oe from data
+    oe(:,3:6) = oe(:,3:6).*pi/180; %convert appropriate values in oe to radians
+    
+     
+    for index = 1:length(vehicles)
+        [R_vehicles_ECI(index,1:3),V_vehicles_ECI(index,1:3)] = ...
+            oe2eci(mu_earth,oe(index,1),oe(index,2),oe(index,3),oe(index,4),oe(index,5),oe(index,6)); 
+        %convert OE for each vehicle to ECI
 
+    end
+    
     %solar days between jan 1, 2000 12:00 til jan 1 2018, 00:00 (wolfram alpha)
     days = 6574.5; %Days
     theta_epoch = mod((280.4606 + 360.9856473*days)/180*pi,2*pi); %Radians
