@@ -23,7 +23,7 @@ close all;
     size_for_things = 100;
 
     %target things
-    target_alt = 1200; %(km)
+    target_alt = 1000; %(km)
     target_ratio = (R_earth+target_alt)/R_earth;
     max_delta_v = 4; 
 
@@ -35,7 +35,7 @@ close all;
     header1 = cell2mat(x{1});
     y = textscan(fileID,'%s',1,'delimiter','\n\r');
     header2 = cell2mat(y{1});
-    data = cell2mat(textscan(fileID,'%f %f %f %f %f %f %f',3,'delimiter','/n/r'));
+    data = cell2mat(textscan(fileID,'%f %f %f %f %f %f %f','delimiter','/n/r'));
     fclose('all');
 
     numSats = data(end,1);
@@ -55,13 +55,14 @@ close all;
     clearvars fileID x y data header1 header2
 
 %%  Calculate Satellite Orbits
-
+for timeLoop = 1:5:110
     % Initialize arrays
     tvecLength = 10001;
     
     % need to have a delay of 0 if you want to "send it" at 0 seconds
-    t_start_to_intercept = 25*60; % 25 minute window to intercept
-    t_deorbit_delay = [0 5 10 15 20]*60; % variable delays until launch
+    t_simStart_delay = timeLoop*60; % variable delay until simulation start
+    t_start_to_intercept = 25*60+t_simStart_delay; % 25 minute window to intercept
+    t_deorbit_delay = [0 5 10 15 20]*60+t_simStart_delay; % variable delays until launch
     
     satTime = zeros(numSats,tvecLength);
     satState = zeros(numSats,tvecLength,6);
@@ -169,42 +170,80 @@ close all;
         
 %% Plot Globe, Sat 1 and possibe Trajectories
 
-    for satNum = 1:numSats
-        
-        figure(satNum)
-        hold on
+%     for satNum = 1:numSats
+%         
+%         figure(satNum)
+%         hold on
+% 
+%         load('topo.mat','topo','topomap1');
+%         [xearth,yearth,zearth,props,cax] = prepplot(size_for_things);
+%         cax = newplot(cax);
+%         h(1) = surf(xearth,yearth,zearth,props,'parent',cax);
+%         hold on
+%         axis equal
+%         xlabel(['X [km]'])
+%         ylabel(['Y [km]'])
+%         zlabel(['Z [km]'])
+%         view(127.5,30)
+%         % %%%%%%%
+%         cmapsize = 64;  % 64-elements is each colormap
+%         cvalue1 = [-7473 ,5731];
+%         C1 = min(cmapsize,round((cmapsize-1)*(topo-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
+%         set(h(1),'CData',C1);
+%         colormap([topomap1;autumn(64)]);
+%         clearvars cmapsize C1 cax i j topomap1 topo
+% 
+%         %Plot sat 1 and its possible trajectory
+%         h(2) = surf(x,y,z,64+squeeze(viableTargets(satNum,:,:))*(64/max_delta_v),'FaceAlpha',.9, 'EdgeColor','none');
+%         h(3) = plot3(satState(satNum,:,1),satState(satNum,:,2),satState(satNum,:,3),'r');
+%         h(4) = plot3(satState(satNum,1,1),satState(satNum,1,2),satState(satNum,1,3),'or','MarkerFaceColor','r');
+% 
+%         hold on
+%         for i = 2:length(t_deorbit_delay)
+%             h(4+i) = plot3(satState(satNum,timeindex(i),1),satState(satNum,timeindex(i),2),satState(satNum,timeindex(i),3),'om','MarkerFaceColor','m');
+%         end
+% 
+%         disp(' ')
+%         clearvars i tvec
+%         
+%         hold off
+%         
+%     end 
+    
+    boolHit = viableTargets;
+    boolHit(~isnan(boolHit)) = 1;
+    boolHit(isnan(boolHit)) = 0;
+    targetOverlap = squeeze(sum(boolHit,1));
+    targetOverlap(targetOverlap==0) = nan;
+    
+    figure(timeLoop)
+    hold on
 
-        load('topo.mat','topo','topomap1');
-        [xearth,yearth,zearth,props,cax] = prepplot(size_for_things);
-        cax = newplot(cax);
-        h(1) = surf(xearth,yearth,zearth,props,'parent',cax);
-        hold on
-        axis equal
-        xlabel(['X [km]'])
-        ylabel(['Y [km]'])
-        zlabel(['Z [km]'])
-        view(127.5,30)
-        % %%%%%%%
-        cmapsize = 64;  % 64-elements is each colormap
-        cvalue1 = [-7473 ,5731];
-        C1 = min(cmapsize,round((cmapsize-1)*(topo-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
-        set(h(1),'CData',C1);
-        colormap([topomap1;autumn(64)]);
-        clearvars cmapsize C1 cax i j topomap1 topo
+    load('topo.mat','topo','topomap1');
+    [xearth,yearth,zearth,props,cax] = prepplot(size_for_things);
+    cax = newplot(cax);
+    h(1) = surf(xearth,yearth,zearth,props,'parent',cax);
+    hold on
+    axis equal
+    xlabel(['X [km]'])
+    ylabel(['Y [km]'])
+    zlabel(['Z [km]'])
+    view(127.5,30)
+    % %%%%%%%
+    cmapsize = 64;  % 64-elements is each colormap
+    cvalue1 = [-7473 ,5731];
+    C1 = min(cmapsize,round((cmapsize-1)*(topo-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
+    set(h(1),'CData',C1);
+    colormap([topomap1;autumn(64)]);
+    clearvars cmapsize C1 cax i j topomap1 topo
 
-        %Plot sat 1 and its possible trajectory
-        h(2) = surf(x,y,z,64+squeeze(viableTargets(satNum,:,:))*(64/max_delta_v),'FaceAlpha',.9, 'EdgeColor','none');
-        h(3) = plot3(satState(satNum,:,1),satState(satNum,:,2),satState(satNum,:,3),'r');
-        h(4) = plot3(satState(satNum,1,1),satState(satNum,1,2),satState(satNum,1,3),'or','MarkerFaceColor','r');
+    %Plot sat 1 and its possible trajectory
+    h(2) = surf(x,y,z,64+targetOverlap*(64/max(max(targetOverlap))),'FaceAlpha',.9, 'EdgeColor','none');
 
-        hold on
-        for i = 2:length(t_deorbit_delay)
-            h(4+i) = plot3(satState(satNum,timeindex(i),1),satState(satNum,timeindex(i),2),satState(satNum,timeindex(i),3),'om','MarkerFaceColor','m');
-        end
+    hold on
 
-        disp(' ')
-        clearvars i tvec
-        
-        hold off
-        
-    end 
+    disp(' ')
+    clearvars i tvec
+
+    hold off
+end
