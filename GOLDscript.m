@@ -57,7 +57,7 @@ close all;
 %%  Calculate Satellite Orbits
 for timeLoop = 1:1:110
     % Initialize arrays
-    tvecLength = 10001;
+    tvecLength = 5001;
     
     % need to have a delay of 0 if you want to "send it" at 0 seconds
     t_simStart_delay = timeLoop*60; % variable delay until simulation start
@@ -230,7 +230,10 @@ for timeLoop = 1:1:110
     hold on
 
     load('topo.mat','topo','topomap1');
-    [xearth,yearth,zearth,props,cax] = prepplot(size_for_things);
+    theta = timeLoop/110*tvec(end);
+    theta = -mod((280.4606 + 360.9856473*theta/86164)/180*pi,2*pi); %Radians
+    
+    [xearth,yearth,zearth,props,cax] = prepplot(size_for_things,theta);
     cax = newplot(cax);
     h(1) = surf(xearth,yearth,zearth,props,'parent',cax);
     hold on
@@ -242,7 +245,7 @@ for timeLoop = 1:1:110
     % %%%%%%%
     cmapsize = 64;  % 64-elements is each colormap
     cvalue1 = [-7473 ,5731];
-    C1 = min(cmapsize,round((cmapsize-1)*(topo-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
+    C1 = min(cmapsize,round((cmapsize-1)*(props.Cdata-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
     set(h(1),'CData',C1);
     colormap([topomap1;autumn(64)]);
     clearvars cmapsize C1 cax i j topomap1 topo

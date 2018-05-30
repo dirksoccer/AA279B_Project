@@ -97,6 +97,7 @@ if nargout == 0
     % Note that if you plot orbit trajectories in the Earth-Centered-
     % Inertial, the orientation of the contintents will be misleading.
     topo2 = [topo(:,181:360) topo(:,1:180)]; %#ok<NODEF>
+    %topo2 = [topo2(:,181:360) topo2(:,1:180)];
     
     % Define surface settings
     props.FaceColor= 'texture';
