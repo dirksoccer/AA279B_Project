@@ -94,7 +94,7 @@ for j = 1:size_for_things
     theta = j/size_for_things*tvec(end);
     theta = -mod((280.4606 + 360.9856473*theta/86164)/180*pi,2*pi); %Radians
 
-    figure('position',[100 100 1200 800])
+    figure('position',[100 60 1200 745])
     hold on
     load('topo.mat','topo','topomap1');
     [xearth,yearth,zearth,props,cax] = prepplot(size_for_things,theta);
