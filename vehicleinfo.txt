@@ -1,4 +1,7 @@
 Information given at epoch of 00:00h Jan 1, 2018 UTC
-Vehicle number	Vehicle Coords(km-ECI-xyz)	Vehicle velocity(km/s-ECI-xyz)
-1   0       -7878.1 0        6.5565  0     -2.7583
-2	0       4000	6000    -8      0       1
+Vehicle number	a(km)   e   i(deg)  RAN(deg)    AP (deg)    M_o(deg)
+1       7950            0      45    45         40          290
+2       7950            0      45    90         40          305
+3       7950            0      45    135        40          320
+4       7950            0      45    180        40          335
+5       7950            0      45    225        40          350

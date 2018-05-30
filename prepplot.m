@@ -1,4 +1,4 @@
-function [x,y,z,props,cax] = prepplot(n)
+function [x,y,z,props,cax] = prepplot(n,th)
 
 
      
@@ -15,8 +15,12 @@ z = 6378.1*sin(phi)*ones(1,n+1);
 cax = [];
 
 load('topo.mat','topo','topomap1');
+a = mod(round(th/pi*180),360);
 
-topo2 = [topo(:,181:360) topo(:,1:180)]; 
+topo2 = [topo(:,181:360) topo(:,1:180)];
+topo2 = [topo2(:,a+1:360) topo2(:,1:a)];
+
+
 
 props.FaceColor= 'texture';
 props.EdgeColor = 'none';
