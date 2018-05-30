@@ -33,7 +33,7 @@ close all;
 %%  Initialize Satellite Parameters
 
     % Read Orbital Elements from file
-    fileID = fopen('vehicleinfo_oe.txt','r');
+    fileID = fopen('vehicleinfo.txt','r');
     x = textscan(fileID,'%s',1,'delimiter','\n\r');
     header1 = cell2mat(x{1});
     y = textscan(fileID,'%s',1,'delimiter','\n\r');
@@ -87,10 +87,10 @@ ax = gca;
 ax.NextPlot = 'replaceChildren';
 
 
-F(3) = struct('cdata',[],'colormap',[]);
-
-for j = 1:size_for_things
-        
+%F(size_for_things) = struct('cdata',[],'colormap',[]);
+F(4) = struct('cdata',[],'colormap',[]);
+for j = 1:4
+%for j = 1:size_for_things
     theta = j/size_for_things*tvec(end);
     theta = -mod((280.4606 + 360.9856473*theta/86164)/180*pi,2*pi); %Radians
 
@@ -125,7 +125,7 @@ for j = 1:size_for_things
     end
     drawnow
     F(j) = getframe(gcf,[390 220 440 340]);
-    close
+
 
 end
 v = VideoWriter('Tester.avi');

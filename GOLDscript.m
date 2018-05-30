@@ -75,7 +75,8 @@ for timeLoop = 1:1:110
         vel = V_vehicles_ECI(index,:)';
         
         % set this up for 1 complete period of the orbit
-        tvec = linspace(0,2*pi*sqrt(oe(index,1)^3/mu_earth),tvecLength);
+        %tvec = linspace(0,2*pi*sqrt(oe(index,1)^3/mu_earth),tvecLength);
+        tvec = linspace(0,25*60,tvecLength);
 
         % Solve for satellite orbit
         options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
@@ -128,35 +129,11 @@ for timeLoop = 1:1:110
                         % Keep lower velocity solution
                         %   Set a dummy variable, success2, as the current step's DV
                         %   needed to get to target position
-                        minDV = min([norm(squeeze(satState(satNum,satTimeIndex(satNum,index),4:6))'-vSout'),...
+                        suc(i,j) = min([norm(squeeze(satState(satNum,satTimeIndex(satNum,index),4:6))'-vSout'),...
                                     norm(squeeze(satState(satNum,satTimeIndex(satNum,index),4:6))'-vLout')]);
-                        
-                        % First delay time, need to initialize numbers in suc somewhere to be able to compare things to it
-                        if index == 1   
-                            
-%                             vout = v2out; %set the DV for that iteration 
-                            suc(i,j) = minDV;%update the suc matrix with the first set of DV's
-
-                        % Rest of delay times, keep best solution available
-                        elseif(suc(i,j)>minDV)
-
-                            suc(i,j) = minDV;
-%                             vout = v2out; %also output the v2out from lambert that gave a better DV
-                            if (minDV <= max_delta_v)
-                                disp('got better'); %if the improvement is within our limits, 
-                                %print that the solver found a better solution
-                                %after using a delay
-                                %I have played with it a bit and have not got any
-                                %increase without reversing the order of the 
-                                %t_deorbit_delay variable
-                            end
-                            
-                        end 
-                        
+                        %update the suc matrix with the first set of DV's
                     end
                     
-                    %update velocity vector to the best one
-%                     v1_out(i,j,1:3) = vout; 
                     
                 end
             end
@@ -226,7 +203,7 @@ for timeLoop = 1:1:110
     targetOverlap = squeeze(sum(boolHit,1));
     targetOverlap(targetOverlap==0) = nan;
     
-    figure(timeLoop)
+    figure
     hold on
 
     load('topo.mat','topo','topomap1');
@@ -245,13 +222,16 @@ for timeLoop = 1:1:110
     % %%%%%%%
     cmapsize = 64;  % 64-elements is each colormap
     cvalue1 = [-7473 ,5731];
+ 
     C1 = min(cmapsize,round((cmapsize-1)*(props.Cdata-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
     set(h(1),'CData',C1);
-    colormap([topomap1;autumn(64)]);
-    clearvars cmapsize C1 cax i j topomap1 topo
+    variable1 = jet(64);
+    colormap([topomap1;variable1(:,end:-1:1)]);
+    %clearvars cmapsize C1 cax i j topomap1 topo variable1
 
     %Plot sat 1 and its possible trajectory
-    h(2) = surf(x,y,z,64+targetOverlap*(64/max(max(targetOverlap))),'FaceAlpha',.9, 'EdgeColor','none');
+    h(2) = surf(xearth,yearth,zearth,0.*zearth+2*64,'FaceAlpha',0,'EdgeColor','none');
+    h(3) = surf(x,y,z,65+(targetOverlap-1)*16,'FaceAlpha',.9, 'EdgeColor','none');
 
     hold on
 

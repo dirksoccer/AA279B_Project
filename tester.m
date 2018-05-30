@@ -42,7 +42,7 @@ close all;
     oe = data(:,2:7); %pull oe from data
     oe(:,3:6) = oe(:,3:6).*pi/180; %convert appropriate values in oe to radians
     oe(:,6) = oe(:,6)-pi/4;
-    oe(:,1) = oe(:,1)-200;
+    oe(:,1) = oe(:,1)+.5;
      
     for index = 1:numSats
         [R_vehicles_ECI(index,1:3),V_vehicles_ECI(index,1:3)] = ...
@@ -63,7 +63,7 @@ for timeLoop = 1
     % need to have a delay of 0 if you want to "send it" at 0 seconds
     t_simStart_delay = timeLoop*60; % variable delay until simulation start
     t_start_to_intercept = 25*60+t_simStart_delay; % 25 minute window to intercept
-    t_deorbit_delay = [0]*60+t_simStart_delay; % [0 5 10 15 20] variable delays until launch
+    t_deorbit_delay = [10]*60+t_simStart_delay; % [0 5 10 15 20] variable delays until launch
     
     satTime = zeros(numSats,tvecLength);
     satState = zeros(numSats,tvecLength,6);
