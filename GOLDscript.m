@@ -119,9 +119,11 @@ for timeLoop = 1:1:110
                     for index = 1:length(t_deorbit_delay)
 
                         % Calculate short way lambert solution
-                        [vSout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),1:3))',[x(i,j) y(i,j) z(i,j)],'s',0,t_start_to_intercept-t_deorbit_delay(index));
+                        [vSout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),1:3))',...
+                            [x(i,j) y(i,j) z(i,j)],'s',0,t_start_to_intercept-t_deorbit_delay(index));
                         % Calculate long way lambert solution
-                        [vLout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),1:3))',[x(i,j) y(i,j) z(i,j)],'l',0,t_start_to_intercept-t_deorbit_delay(index));
+                        [vLout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),1:3))',...
+                            [x(i,j) y(i,j) z(i,j)],'l',0,t_start_to_intercept-t_deorbit_delay(index));
                         
                         % Keep lower velocity solution
                         %   Set a dummy variable, success2, as the current step's DV
@@ -164,6 +166,13 @@ for timeLoop = 1:1:110
             % Keep only DV values under our threshold
             success(suc>max_delta_v) = NaN;
             viableTargets(satNum,:,:) = success;
+            success_area(satNum) = sum(sum((success>-1).*...
+                cos(asin(z/r))))/sum(sum(cos(asin(z/r))));
+            
+
+            %this value is what amount of the globe is covered by this
+
+            %vehicle. 1 = total coverage, 0 = no coverage
             clearvars success2 suc i j index vout v2out 
             
         end
@@ -200,7 +209,8 @@ for timeLoop = 1:1:110
 % 
 %         hold on
 %         for i = 2:length(t_deorbit_delay)
-%             h(4+i) = plot3(satState(satNum,timeindex(i),1),satState(satNum,timeindex(i),2),satState(satNum,timeindex(i),3),'om','MarkerFaceColor','m');
+%             h(4+i) = plot3(satState(satNum,timeindex(i),1),satState(satNum,timeindex(i),2),...
+                %satState(satNum,timeindex(i),3),'om','MarkerFaceColor','m');
 %         end
 % 
 %         disp(' ')
