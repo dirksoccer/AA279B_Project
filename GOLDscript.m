@@ -57,7 +57,7 @@ close all;
 %%  Calculate Satellite Orbits
 for timeLoop = 1:1:110
     % Initialize arrays
-    tvecLength = 5001;
+    tvecLength = 201;
     
     % need to have a delay of 0 if you want to "send it" at 0 seconds
     t_simStart_delay = timeLoop*60; % variable delay until simulation start
@@ -225,14 +225,15 @@ for timeLoop = 1:1:110
  
     C1 = min(cmapsize,round((cmapsize-1)*(props.Cdata-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
     set(h(1),'CData',C1);
-    variable1 = jet(64);
-    colormap([topomap1;variable1(:,end:-1:1)]);
+    %variable1 = jet(64);
+    %colormap([topomap1;variable1(:,end:-1:1)]);
+    colormap([topomap1;autumn(64)]);
     %clearvars cmapsize C1 cax i j topomap1 topo variable1
 
     %Plot sat 1 and its possible trajectory
     h(2) = surf(xearth,yearth,zearth,0.*zearth+2*64,'FaceAlpha',0,'EdgeColor','none');
-    h(3) = surf(x,y,z,65+(targetOverlap-1)*16,'FaceAlpha',.9, 'EdgeColor','none');
-
+    h(3) = surf(x,y,z,65+(targetOverlap-1)*63/5,'FaceAlpha',.9, 'EdgeColor','none');
+    caxis([1 128]);
     hold on
 
     disp(' ')
