@@ -55,14 +55,14 @@ close all;
     clearvars fileID x y data header1 header2
 
 %%  Calculate Satellite Orbits
-for timeLoop = 1:5:110
+for timeLoop = 1:25:110
     % Initialize arrays
     tvecLength = 10001;
     
     % need to have a delay of 0 if you want to "send it" at 0 seconds
     t_simStart_delay = timeLoop*60; % variable delay until simulation start
     t_start_to_intercept = 25*60+t_simStart_delay; % 25 minute window to intercept
-    t_deorbit_delay = [0 5 10 15 20]*60+t_simStart_delay; % variable delays until launch
+    t_deorbit_delay = [0]*60+t_simStart_delay; % variable delays until launch
     
     satTime = zeros(numSats,tvecLength);
     satState = zeros(numSats,tvecLength,6);
@@ -119,9 +119,11 @@ for timeLoop = 1:5:110
                     for index = 1:length(t_deorbit_delay)
 
                         % Calculate short way lambert solution
-                        [vSout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),1:3))',[x(i,j) y(i,j) z(i,j)],'s',0,t_start_to_intercept-t_deorbit_delay(index));
+                        [vSout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),...
+                            1:3))',[x(i,j) y(i,j) z(i,j)],'s',0,t_start_to_intercept-t_deorbit_delay(index));
                         % Calculate long way lambert solution
-                        [vLout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),1:3))',[x(i,j) y(i,j) z(i,j)],'l',0,t_start_to_intercept-t_deorbit_delay(index));
+                        [vLout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),...
+                            1:3))',[x(i,j) y(i,j) z(i,j)],'l',0,t_start_to_intercept-t_deorbit_delay(index));
                         
                         % Keep lower velocity solution
                         %   Set a dummy variable, success2, as the current step's DV
@@ -200,7 +202,8 @@ for timeLoop = 1:5:110
 % 
 %         hold on
 %         for i = 2:length(t_deorbit_delay)
-%             h(4+i) = plot3(satState(satNum,timeindex(i),1),satState(satNum,timeindex(i),2),satState(satNum,timeindex(i),3),'om','MarkerFaceColor','m');
+%             h(4+i) = plot3(satState(satNum,timeindex(i),1),satState(satNum,timeindex(i),2),...
+%               satState(satNum,timeindex(i),3),'om','MarkerFaceColor','m');
 %         end
 % 
 %         disp(' ')
