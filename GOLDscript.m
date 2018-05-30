@@ -55,14 +55,14 @@ close all;
     clearvars fileID x y data header1 header2
 
 %%  Calculate Satellite Orbits
-for timeLoop = 1:5:110
+for timeLoop = 1:1:110
     % Initialize arrays
     tvecLength = 10001;
     
     % need to have a delay of 0 if you want to "send it" at 0 seconds
     t_simStart_delay = timeLoop*60; % variable delay until simulation start
     t_start_to_intercept = 25*60+t_simStart_delay; % 25 minute window to intercept
-    t_deorbit_delay = [0 5 10 15 20]*60+t_simStart_delay; % variable delays until launch
+    t_deorbit_delay = [0]*60+t_simStart_delay; % [0 5 10 15 20] variable delays until launch
     
     satTime = zeros(numSats,tvecLength);
     satState = zeros(numSats,tvecLength,6);
@@ -246,4 +246,7 @@ for timeLoop = 1:5:110
     clearvars i tvec
 
     hold off
+    
+    M((timeLoop)) = getframe;
+    
 end
