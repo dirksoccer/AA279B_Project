@@ -55,147 +55,86 @@ close all;
     clearvars fileID x y data header1 header2
 
 %%  Calculate Satellite Orbits
-for timeLoop = 1:1:110
-    % Initialize arrays
-    tvecLength = 201;
-    
-    % need to have a delay of 0 if you want to "send it" at 0 seconds
-    t_simStart_delay = timeLoop*60; % variable delay until simulation start
-    t_start_to_intercept = 25*60+t_simStart_delay; % 25 minute window to intercept
-    t_deorbit_delay = [0]*60+t_simStart_delay; % [0 5 10 15 20] variable delays until launch
-    
-    satTime = zeros(numSats,tvecLength);
-    satState = zeros(numSats,tvecLength,6);
-    satTimeIndex = zeros(numSats,length(t_deorbit_delay));
 
+    % Initialize arrays
+    tvecLength = 1001;
+    
+    t_start_to_intercept = 25*60; % 25 minute window to intercept
+    t_deorbit_delay = [0]*60; % [0 5 10 15 20] variable delays until launch
+    
+
+    satState = zeros(numSats,tvecLength,6);
+    tvec = linspace(0,2*pi*sqrt(oe(1,1)^3/mu_earth),tvecLength); %one orbit
+    
     for index = 1:numSats
         
         % Pull Position and Velocity
         pos = R_vehicles_ECI(index,:)';
         vel = V_vehicles_ECI(index,:)';
-        
-        % set this up for 1 complete period of the orbit
-        %tvec = linspace(0,2*pi*sqrt(oe(index,1)^3/mu_earth),tvecLength);
-        tvec = linspace(0,25*60,tvecLength);
-
+       
         % Solve for satellite orbit
         options = odeset('RelTol', 1e-6, 'AbsTol', 1e-9);
         odefun = @(tout,yout) differinertial(tout,yout,mu_earth);
         [tout,yout] = ode113(odefun,tvec,[pos;vel],options);
-        satTime(index,:) = tout(:);
+        satTime(:) = tout(:);
         satState(index,:,:) = yout(:,:);
-
-        timeindex = zeros(1,length(t_deorbit_delay));
-        for i = 1:length(t_deorbit_delay)
-            [~,timeindex(i)] = min(abs(t_deorbit_delay(i) - tout)); % get index for the needed time step
-        end
-        
-        satTimeIndex(index,:) = timeindex(:);
         
     end
-    
+    clearvars pos vel
 %% Find Satellite Intercept Possibilities
+    
+for timeLoop = 1:1:110
+    index_of_deorbit = ceil(timeLoop/110*tvecLength);
+    
+    %Define search_space
+    r = target_ratio*R_earth; %radius of intercept
 
-        % Define search_space
-        r = target_ratio*R_earth; %radius of intercept
+    [x,y,z] = sphere(size_for_things);
+    x = x*r; %psuedo longitude variable
+    y = y*r; %psuedo latitude var
+    z = z*r; %psuedo radius var
+    viableTargets = zeros(numSats,length(x),length(y));
 
-        [x,y,z] = sphere(size_for_things);
-        x = x*r; %psuedo longitude variable
-        y = y*r; %psuedo latitude var
-        z = z*r; %psuedo radius var
-        viableTargets = zeros(numSats,length(x),length(y));
-        
-        % Loop through satellite firing solutions
-        for satNum = 1:numSats
-            
-            suc = x.*NaN; %initialize an array
+    % Loop through satellite firing solutions
+    for satNum = 1:numSats
 
-            %% The first sat
+        suc = x.*NaN; %initialize an array
 
-            %iterate through search space
-            for i = 1:length(x)
-                for j = 1:length(y)
+        %% The first sat
 
-                    %iterate through different delays
-                    for index = 1:length(t_deorbit_delay)
+        %iterate through search space
+        for i = 1:length(x)
+            for j = 1:length(y)
 
-                        % Calculate short way lambert solution
-                        [vSout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),1:3))',...
-                            [x(i,j) y(i,j) z(i,j)],'s',0,t_start_to_intercept-t_deorbit_delay(index));
-                        % Calculate long way lambert solution
-                        [vLout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,satTimeIndex(satNum,index),1:3))',...
-                            [x(i,j) y(i,j) z(i,j)],'l',0,t_start_to_intercept-t_deorbit_delay(index));
-                        
-                        % Keep lower velocity solution
-                        %   Set a dummy variable, success2, as the current step's DV
-                        %   needed to get to target position
-                        suc(i,j) = min([norm(squeeze(satState(satNum,satTimeIndex(satNum,index),4:6))'-vSout'),...
-                                    norm(squeeze(satState(satNum,satTimeIndex(satNum,index),4:6))'-vLout')]);
-                        %update the suc matrix with the first set of DV's
-                    end
-                    
-                    
-                end
+                % Calculate short way lambert solution
+                [vSout,~,~] = lambert_v(mu_earth,squeeze(satState(satNum,index_of_deorbit,1:3))',...
+                    [x(i,j) y(i,j) z(i,j)],'s',0,t_start_to_intercept);
+                % Keep lower velocity solution
+                %   Set a dummy variable, success2, as the current step's DV
+                %   needed to get to target position
+                suc(i,j) = norm(squeeze(satState(satNum,index_of_deorbit,4:6))'-vSout');
+                           
+                %update the suc matrix with the first set of DV's
+
             end
-
-
-            success = suc;
-            % Keep only DV values under our threshold
-            success(suc>max_delta_v) = NaN;
-            viableTargets(satNum,:,:) = success;
-            success_area(satNum) = sum(sum((success>-1).*...
-                cos(asin(z/r))))/sum(sum(cos(asin(z/r))));
-            
-
-            %this value is what amount of the globe is covered by this
-
-            %vehicle. 1 = total coverage, 0 = no coverage
-            clearvars success2 suc i j index vout v2out 
-            
         end
-        
-%% Plot Globe, Sat 1 and possibe Trajectories
 
-%     for satNum = 1:numSats
-%         
-%         figure(satNum)
-%         hold on
-% 
-%         load('topo.mat','topo','topomap1');
-%         [xearth,yearth,zearth,props,cax] = prepplot(size_for_things);
-%         cax = newplot(cax);
-%         h(1) = surf(xearth,yearth,zearth,props,'parent',cax);
-%         hold on
-%         axis equal
-%         xlabel(['X [km]'])
-%         ylabel(['Y [km]'])
-%         zlabel(['Z [km]'])
-%         view(127.5,30)
-%         % %%%%%%%
-%         cmapsize = 64;  % 64-elements is each colormap
-%         cvalue1 = [-7473 ,5731];
-%         C1 = min(cmapsize,round((cmapsize-1)*(topo-cvalue1(1))/(cvalue1(2)-cvalue1(1)))+1); 
-%         set(h(1),'CData',C1);
-%         colormap([topomap1;autumn(64)]);
-%         clearvars cmapsize C1 cax i j topomap1 topo
-% 
-%         %Plot sat 1 and its possible trajectory
-%         h(2) = surf(x,y,z,64+squeeze(viableTargets(satNum,:,:))*(64/max_delta_v),'FaceAlpha',.9, 'EdgeColor','none');
-%         h(3) = plot3(satState(satNum,:,1),satState(satNum,:,2),satState(satNum,:,3),'r');
-%         h(4) = plot3(satState(satNum,1,1),satState(satNum,1,2),satState(satNum,1,3),'or','MarkerFaceColor','r');
-% 
-%         hold on
-%         for i = 2:length(t_deorbit_delay)
-%             h(4+i) = plot3(satState(satNum,timeindex(i),1),satState(satNum,timeindex(i),2),...
-                %satState(satNum,timeindex(i),3),'om','MarkerFaceColor','m');
-%         end
-% 
-%         disp(' ')
-%         clearvars i tvec
-%         
-%         hold off
-%         
-%     end 
+
+        success = suc;
+        % Keep only DV values under our threshold
+        success(suc>max_delta_v) = NaN;
+        viableTargets(satNum,:,:) = success;
+        success_area(satNum) = sum(sum((success>-1).*...
+            cos(asin(z/r))))/sum(sum(cos(asin(z/r))));
+
+
+        %this value is what amount of the globe is covered by this
+
+        %vehicle. 1 = total coverage, 0 = no coverage
+        clearvars success2 suc i j index vout v2out 
+
+    end
+        
     
     boolHit = viableTargets;
     boolHit(~isnan(boolHit)) = 1;
@@ -237,7 +176,7 @@ for timeLoop = 1:1:110
     hold on
 
     disp(' ')
-    clearvars i tvec
+    clearvars i
 
     hold off
     
