@@ -88,8 +88,8 @@ ax.NextPlot = 'replaceChildren';
 
 
 %F(size_for_things) = struct('cdata',[],'colormap',[]);
-F(4) = struct('cdata',[],'colormap',[]);
-for j = 1:4
+F(size_for_things) = struct('cdata',[],'colormap',[]);
+for j = 1:size_for_things
 %for j = 1:size_for_things
     theta = j/size_for_things*tvec(end);
     theta = -mod((280.4606 + 360.9856473*theta/86164)/180*pi,2*pi); %Radians
@@ -125,9 +125,15 @@ for j = 1:4
     end
     drawnow
     F(j) = getframe(gcf,[390 220 440 340]);
-
+    fprintf(num2str(j))
+    fprintf(' ')
+    if (mod(j,15) == 0)
+        disp(' ')
+    end
+close
 
 end
+disp(' ')
 v = VideoWriter('Tester.avi');
 open(v)
 writeVideo(v,F)

@@ -124,9 +124,6 @@ for timeLoop = 1:1:110
         % Keep only DV values under our threshold
         success(suc>max_delta_v) = NaN;
         viableTargets(satNum,:,:) = success;
-        success_area(satNum) = sum(sum((success>-1).*...
-            cos(asin(z/r))))/sum(sum(cos(asin(z/r))));
-
 
         %this value is what amount of the globe is covered by this
 
@@ -181,5 +178,6 @@ for timeLoop = 1:1:110
     hold off
     
     M((timeLoop)) = getframe;
+    close
     
 end
